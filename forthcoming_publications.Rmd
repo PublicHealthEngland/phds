@@ -1,0 +1,155 @@
+---
+title: "Calendar of forthcoming publications"
+date: "`r Sys.Date()`"
+output:
+  github_document:
+  html_document:
+    df_print: paged
+    toc: yes
+---
+
+## Public health intelligence calendar	
+	
+### Aim	
+
+To provide one list of public health data and statistics due to be published in the following two weeks
+	
+### Scope	
+
+Public health data and statistics from Public Health England, NHS Digital, NHS England and other government departments in England 
+	
+Sources checked	"Statistics release calendar
+"
+	https://www.gov.uk/search/research-and-statistics
+	Public Health England's key activity document (also available to local authorities via the Directors of Public Health bulletin)
+	
+### Frequency	
+
+Published weekly on a Friday
+	
+Disclaimer	All content and dates included in this calendar are subject to short notice change and possible cancellation – changes to dates will be amended in the following week's scan.
+
+
+```{r setup, inlcude = FALSE, echo = FALSE}
+
+knitr::opts_chunk$set(
+	message = FALSE,
+	warning = FALSE,
+	cache = TRUE,
+	include = FALSE
+)
+library(pacman)
+
+
+p_load(myScrapers, tidytext, quanteda, tidyverse, rvest, openxlsx)
+
+```
+
+
+```{r page-links}
+
+url <- paste0("https://www.gov.uk/search/research-and-statistics?content_store_document_type=upcoming_statistics&page=", 1:82)
+
+links <- map(url, get_page_links) %>%
+  enframe()
+
+
+links <- links %>%
+  unnest(cols = "value") %>%
+  filter(str_detect(value, "government")) %>%
+  mutate(urls = paste0("https://www.gov.uk", value)) %>%
+  filter(!str_detect(value, "organisations|how-government-works|nationalarchives"))
+
+#head(links, 100)
+
+
+```
+
+
+```{r page-titles}
+
+get_link <- function(url) {
+  
+  out <- read_html(url) %>%
+  html_nodes(".gem-c-document-list__item-link") %>%
+  html_text()
+  out
+}
+
+titles <- map(url, get_link) %>%
+  enframe() %>%
+  unnest(cols = "value")
+
+links <- bind_cols(links, titles)
+
+```
+
+```{r page-description}
+
+get_description <- function(url) {
+  
+  out <- read_html(url) %>%
+  html_nodes(".gem-c-document-list__item-description") %>%
+  html_text()
+  out
+}
+
+descriptions <- map(url, get_description) %>%
+  enframe() %>%
+  unnest(cols = "value") 
+
+```
+
+
+
+
+```{r page-metadata}
+
+get_metadata <- function(url) {
+  
+  out <- read_html(url) %>%
+  html_nodes(".gem-c-document-list__item-metadata") %>%
+  html_text()
+  out
+}
+
+meta <- map(url, get_metadata) %>%
+  enframe() %>%
+  unnest(cols = "value") 
+
+meta <- meta %>%
+  separate(value, remove = TRUE, c("a", "Document type",  "b", "c", "Organisation", "d", "e", "Release Date", "f", "g", "State"), sep = "\\n") %>%
+  select(-c(a, b, c, d, e, f, g)) %>%
+  mutate(`Release Date` = str_remove(`Release Date`, "Release date: "),
+         State = str_remove(State, "State: "), 
+         Organisation = str_remove(Organisation, "Organisation: "), 
+         `Document type` = str_remove(`Document type`, "Document type: "))
+
+#meta
+
+```
+
+## Calendar
+
+```{r final-calendar, include = TRUE, echo = FALSE}
+table <- bind_cols(links, meta, descriptions)
+
+table <- table %>%
+  select(-contains("name"), title = value1, description = value1)
+
+table <- table %>%
+  select(-value)
+
+table <- table %>%
+  mutate(link = paste0("<a href =",  urls,  ">Link</a>")) %>%
+  select(-urls)
+
+table <- rename(table, title = description, description = value2)
+
+table %>%
+  openxlsx::write.xlsx(paste0("forthcoming_pubs", Sys.Date(), ".xlsx"))
+
+table %>%
+  DT::datatable(escape = FALSE, filter = "top", rownames = FALSE)
+```
+
