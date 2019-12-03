@@ -15,7 +15,9 @@ get_dsph_england<- function(url = "https://www.gov.uk/government/publications/di
   
   require(rvest)
   require(dplyr)
-  require(stringr)
+  if(!require(stringr))install.packages("stringr")
+  library(stringr)
+  
   url <- url
   
   dsph <- get_page_text(url) %>%
