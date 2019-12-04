@@ -12,16 +12,17 @@
 #' dsph <- get_dsph_england()
 #' 
 get_dsph_england<- function(url = "https://www.gov.uk/government/publications/directors-of-public-health-in-england--2/directors-of-public-health-in-england"){
-  
+  require(myScrapers)
   require(rvest)
   require(dplyr)
   if(!require(stringr))install.packages("stringr")
-  library(stringr)
+  require(stringr)
+  require(tidyr)
   
   url <- url
   
   dsph <- get_page_text(url) %>%
-    .[14:165] %>%
+    .[11:162] %>%
     data.frame() 
   
   # dsph <- dsph %>%
@@ -45,5 +46,3 @@ get_dsph_england<- function(url = "https://www.gov.uk/government/publications/di
 
 
 
-
-  
