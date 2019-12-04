@@ -1,12 +1,6 @@
+## creates a data frame of PHE stats and publications on GOV.UK
 
-
-
-## creates a data table of PHE stats and publications on .gov.uk
-
-
-
-
-#' Get an interactive datatable of PHE resources on GOV.UK
+#' Get data.frame of PHE resources on GOV.UK
 #'
 #' @param url 
 #' @param pages 
@@ -19,11 +13,8 @@
 #' df <- get_phe_catalogue(n = 100)
 get_phe_catalogue <- function(url = "https://www.gov.uk/search/all?organisations%5B%5D=public-health-england", n= 298) {
   
-  library(Rcrawler)
   library(rvest)
-
   library(stringr)
-  
   require(dplyr)
   
   first_page <- url
