@@ -2,7 +2,6 @@
 title: "Calendar of forthcoming publications"
 date: "`r Sys.Date()`"
 output:
-  github_document:
   html_document:
     df_print: paged
     toc: yes
@@ -116,7 +115,9 @@ get_metadata <- function(url) {
 meta <- map(url, get_metadata) %>%
   enframe() %>%
   unnest(cols = "value") 
+```
 
+```{r clean-meta}
 meta <- meta %>%
   separate(value, remove = TRUE, c("a", "Document type",  "b", "c", "Organisation", "d", "e", "Release Date", "f", "g", "State"), sep = "\\n") %>%
   select(-c(a, b, c, d, e, f, g)) %>%
@@ -132,19 +133,19 @@ meta <- meta %>%
 ## Calendar
 
 ```{r final-calendar, include = TRUE, echo = FALSE}
-table <- bind_cols(links, meta, descriptions)
+table <- data.frame(cbind(links = links, meta = meta, descriptions = descriptions))
 
 table <- table %>%
-  select(-contains("name"), title = value1, description = value1)
+  select(-contains("name"))
 
 table <- table %>%
-  select(-value)
+  select(-links.value)
 
 table <- table %>%
-  mutate(link = paste0("<a href =",  urls,  ">Link</a>")) %>%
-  select(-urls)
+  mutate(link = paste0("<a href =",  links.urls,  ">Link</a>")) %>%
+  select(-links.urls)
 
-table <- rename(table, title = description, description = value2)
+table <- rename(table, title = links.value1, description = descriptions.value)
 
 table %>%
   openxlsx::write.xlsx(paste0("forthcoming_pubs", Sys.Date(), ".xlsx"))

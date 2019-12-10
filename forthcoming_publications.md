@@ -1,6 +1,6 @@
 Calendar of forthcoming publications
 ================
-2019-12-03
+2019-12-10
 
 ## Public health intelligence calendar
 
